@@ -1,4 +1,4 @@
-module Gol3d.Render 
+module Gol3d.Render
 ( drawCell
 , drawCellMap
 , CellDrawConfig(..)
@@ -23,7 +23,7 @@ data CellDrawConfig = CellDrawConfig { wireFrameColor :: Cell -> Color3 GLfloat
  -- and become bluer as they age. If the age of a cell is less than one, this
  -- function is undefined.
 defaultBodyColor :: Cell -> Color3 GLfloat
-defaultBodyColor (Cell { age = n } ) = Color3 (1-b) (1-b) 1 
+defaultBodyColor (Cell { age = n } ) = Color3 (1-b) (1-b) 1
     where b = - 1 / fromIntegral n + 1
 
 -- | Constant black.
@@ -37,7 +37,7 @@ defaultWireFrameColor = const $ Color3 1.0 0 0
 defaultCellDrawConfig = CellDrawConfig { wireFrameColor = defaultWireFrameColor
                                        , bodyColor = defaultBodyColor
                                        , wireFrameFraction = 1.0
-                                       , bodyFraction = 1.0 
+                                       , bodyFraction = 0.96
                                        }
 
 -- | The offsets to add to a "Cell"'s position to determine its vertices.
@@ -61,33 +61,32 @@ faceOffsets = [ [ Vertex3 0 0 0
                 , Vertex3 1 1 0
                 , Vertex3 1 0 0
                 ]
+              , [ Vertex3 0 0 1
+                , Vertex3 0 1 1
+                , Vertex3 1 1 1
+                , Vertex3 1 0 1
+                ]
+              , [ Vertex3 0 0 0
+                , Vertex3 0 0 1
+                , Vertex3 1 0 1
+                , Vertex3 1 0 0
+                ]
+              , [ Vertex3 0 1 0
+                , Vertex3 0 1 1
+                , Vertex3 1 1 1
+                , Vertex3 1 1 0
+                ]
               , [ Vertex3 0 0 0
                 , Vertex3 0 0 1
                 , Vertex3 0 1 1
                 , Vertex3 0 1 0
                 ]
-              , [ Vertex3 0 0 0
-                , Vertex3 1 0 0
+              , [ Vertex3 1 0 0
+                , Vertex3 1 0 1
+                , Vertex3 1 1 1
                 , Vertex3 1 1 0
-                , Vertex3 0 1 0
-                ]
-              , [ Vertex3 1 1 1
-                , Vertex3 1 0 1
-                , Vertex3 0 0 1
-                , Vertex3 0 1 1
-                ]
-              , [ Vertex3 1 1 1
-                , Vertex3 1 1 0
-                , Vertex3 1 0 0
-                , Vertex3 1 0 1
-                ]
-              , [ Vertex3 1 1 1
-                , Vertex3 0 1 1
-                , Vertex3 0 0 1
-                , Vertex3 1 0 1
                 ]
               ]
-
 
 -- | Zip a list with itself, dropping the first n elements.
 -- Thus, each element is zipped with the one n spots later in the list.
@@ -96,7 +95,7 @@ selfZip n xs = zip xs (drop n xs)
 
 -- | Compute the coordinates of the vertices of the cell as it
 -- should be rendered.
-cellVertices :: GLfloat -> Cell 
+cellVertices :: GLfloat -> Cell
              -> [Vertex3 GLfloat] -> [Vertex3 GLfloat]
 cellVertices k c offs = map ((+++) p . fmap scooch) offs
     where Vector3 x y z = cellPos c
@@ -127,8 +126,9 @@ drawBody :: GLfloat -> Color3 GLfloat -> Cell -> IO ()
 drawBody k col c = do
     color col
     let verts = concat vss
+    -- putStrLn "draw body"
+    -- forM_ vss $ putStrLn . show . map (\(Vertex3 x y z) -> (x, y, z))
     renderPrimitive Quads . mapM_ vertex $ verts
-        
     where vss = map (cellVertices k c) faceOffsets
 
 drawCell :: CellDrawConfig -> Cell -> IO ()
