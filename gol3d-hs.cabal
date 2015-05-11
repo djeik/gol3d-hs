@@ -19,7 +19,7 @@ executable gol3d-hs
   main-is:             Main.hs
   -- other-modules:
   -- other-extensions:
-  ghc-options: -fprof-auto -rtsopts
+  ghc-options: -fprof-auto -rtsopts -fwarn-unused-imports
   build-depends:
     base >=4.8 && <4.9,
     vector >=0.10 && <1,

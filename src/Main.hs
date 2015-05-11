@@ -9,12 +9,6 @@ import Data.IORef
 import Graphics.UI.GLUT
 import System.Exit ( exitWith, ExitCode(..) )
 
-import Debug.Trace ( trace )
-
-import qualified Data.Map as M
-
-trace' s = trace (show s) s
-
 data CamState = CamState { camPos :: Vector3 GLfloat
                          , camAngle :: Vector2 GLfloat
                          }
