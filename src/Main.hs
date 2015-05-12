@@ -1,23 +1,33 @@
 module Main where
 
+-- We'd like to use OpenGL's Position unqualified
 import Gol3d.Life hiding ( Position )
 import Gol3d.Pattern
 import Gol3d.Render
 
 import Control.Monad ( when )
 import Data.IORef
+import Data.Maybe ( fromMaybe )
 import Graphics.UI.GLUT
 import System.Exit ( exitWith, ExitCode(..) )
+
+import qualified Data.Map as M
 
 data CamState = CamState { camPos :: Vector3 GLfloat
                          , camAngle :: Vector2 GLfloat
                          }
+
+-- | An internally managed cache of key states.
+-- We need this since GLUT doesn't give us a way to poll key states.
+type KeyboardState = M.Map Key KeyState
 
 data State = State { cellDrawConfig :: CellDrawConfig
                    -- ^ The configuration used to draw the "Cell"s in the
                    -- stored "CellMap".
                    , camState :: CamState
                    -- ^ The current state of the camera.
+                   , kbdState :: KeyboardState
+                   -- ^ An internally managed cache of key states.
                    , cellMap :: CellMap
                    -- ^ The current map of cells.
                    , evolveDelta :: Int
@@ -34,6 +44,7 @@ defaultState = State { cellDrawConfig = defaultCellDrawConfig
                      , camState = CamState { camPos = Vector3 0 0 0
                                            , camAngle = Vector2 0 0
                                            }
+                     , kbdState = M.empty
                      , cellMap = toCellMap glider3
                      , evolveDelta = 100000000
                      , lastEvolve = 0
@@ -41,6 +52,8 @@ defaultState = State { cellDrawConfig = defaultCellDrawConfig
                      , angleSpeed = 0.005
                      }
 
+-- | Transform the camera state advancing the camera by the given amount in
+-- the current direction of the camera.
 advanceCamera :: GLfloat -> CamState -> CamState
 advanceCamera amt s@(CamState { camPos = Vector3 x y z
                               , camAngle = Vector2 theta phi
@@ -49,12 +62,17 @@ advanceCamera amt s@(CamState { camPos = Vector3 x y z
           offY = y + amt * cos phi
           offZ = z + amt * sin theta * sin phi
 
+-- | Impurely transform the game state given as an "IORef" advancing the
+-- camera by a given amount in the direction of the camera.
 advanceCamera' stateR k = do
     s <- readIORef stateR
     let cs' = advanceCamera (k * moveSpeed s) (camState s)
     writeIORef stateR (s { camState = cs' })
 
--- | Translates the camera.
+-- | Impurely transform the game state given as an "IORef" translating the
+-- camera by the given vector. 
+-- Translations are applied relative to the current view as given by the
+-- angles "theta" and "phi" in the "State".
 transCamera' stateR (dx, dy) = do
     s@(State { camState = cs@(CamState { camPos = Vector3 x y z
                                        , camAngle = Vector2 theta phi
@@ -128,6 +146,30 @@ evolveState stateR = do
                          , lastEvolve = et
                          })
 
+getKeyState' kbd key = fromMaybe Up $ M.lookup key kbd
+
+getKeyState :: IORef State -> Key -> IO KeyState
+getKeyState stateR key = do
+    s@(State { kbdState = kbd }) <- get stateR
+    return $ getKeyState' kbd key
+
+whenKey' kbd key state action = when (getKeyState' kbd key == state) action
+
+whenKey stateR key state action = do
+    s <- getKeyState stateR key
+    when (s == state) action
+
+keyPollHandler stateR = do
+    s@(State { kbdState = kbd }) <- get stateR
+    let whenDown key action = whenKey' kbd key Down action
+
+    whenDown (Char 'w') $ advanceCamera' stateR 1
+    whenDown (Char 'a') $ transCamera' stateR (-1, 0)
+    whenDown (Char 'd') $ transCamera' stateR (1, 0)
+    whenDown (Char 's') $ advanceCamera' stateR (-1)
+    whenDown (Char 'q') $ transCamera' stateR (0, -1)
+    whenDown (Char 'e') $ transCamera' stateR (0, 1)
+
 -- ---------------------------------------------------------------------------
 -- Callbacks
 
@@ -141,17 +183,22 @@ motionHandler stateR p = do
         writeIORef stateR (s { camState = cs' })
         centerMouse
 
-inputHandler stateR (Char 'w') Down _ _ = advanceCamera' stateR 1
-inputHandler stateR (Char 'a') Down _ _ = transCamera' stateR (-1, 0)
-inputHandler stateR (Char 'd') Down _ _ = transCamera' stateR (1, 0)
-inputHandler stateR (Char 's') Down _ _ = advanceCamera' stateR (-1)
-inputHandler stateR (Char 'q') Down _ _ = transCamera' stateR (0, -1)
-inputHandler stateR (Char 'e') Down _ _ = transCamera' stateR (0, 1)
-inputHandler stateR (Char ' ') Down _ _ = evolveState stateR
-inputHandler _ (Char 'x') Down _ _ = exitWith ExitSuccess
-inputHandler _ _ _ _ _ = return ()
+inputHandler stateR key state mods pos = do
+    s@(State { kbdState = kbd }) <- get stateR
+    let kbd' = M.insert key state kbd
+    writeIORef stateR $ s { kbdState = kbd' }
+
+    case state of
+        Down ->
+            case key of
+                Char ' ' -> evolveState stateR
+                Char 'x' -> exitWith ExitSuccess
+                _ -> return ()
+        _ -> return ()
 
 display stateR = do
+    keyPollHandler stateR
+
     s@(State { cellDrawConfig = cdc
              , camState = cs
              , cellMap = cm
@@ -174,6 +221,7 @@ main = do
     window <- createWindow "Gol3d"
     depthFunc $= Just Less
     cursor $= None
+    globalKeyRepeat $= GlobalKeyRepeatOff
 
     stateR <- newIORef defaultState
 
