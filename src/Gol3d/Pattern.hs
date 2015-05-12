@@ -4,8 +4,6 @@ import Gol3d.Life
 
 import Graphics.UI.GLUT
 
-import qualified Data.Map as M
-
 import Data.List ( intercalate )
 
 glider3 :: CellList

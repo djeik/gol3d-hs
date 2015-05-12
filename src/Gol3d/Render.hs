@@ -19,9 +19,9 @@ data CellDrawConfig = CellDrawConfig { wireFrameColor :: Cell -> Color3 GLfloat
                                      , bodyFraction :: GLfloat
                                      }
 
- -- | Compute the color of a "Cell", according to its age. New cells are white,
- -- and become bluer as they age. If the age of a cell is less than one, this
- -- function is undefined.
+-- | Compute the color of a "Cell", according to its age. New cells are
+-- white, and become bluer as they age. If the age of a cell is less than
+-- one, this function is undefined.
 defaultBodyColor :: Cell -> Color3 GLfloat
 defaultBodyColor (Cell { age = n } ) = Color3 (1-b) (1-b) 1
     where b = - 1 / fromIntegral n + 1
