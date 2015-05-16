@@ -9,9 +9,22 @@ import System.Exit ( exitWith, ExitCode(ExitSuccess) )
 
 import qualified Data.Map as M
 
+import Util
 import Input
 import Types
 import App
+
+-- | An input handler that uses polling.
+keyPollHandler stateR = do
+    s@(State { kbdState = kbd }) <- get stateR
+    let whenDown key action = whenKey' kbd key Down action
+
+    whenDown (Char 'w') $ advanceCamera' stateR 1
+    whenDown (Char 'a') $ transCamera' stateR (-1, 0)
+    whenDown (Char 'd') $ transCamera' stateR (1, 0)
+    whenDown (Char 's') $ advanceCamera' stateR (-1)
+    whenDown (Char 'q') $ transCamera' stateR (0, -1)
+    whenDown (Char 'e') $ transCamera' stateR (0, 1)
 
 inputHandler stateR key state mods pos = do
     s@(State { kbdState = kbd }) <- get stateR
@@ -32,7 +45,7 @@ motionHandler stateR p = do
              }) <- get stateR
     d@(dx, dy) <- mouseDelta p
     when (dx /= 0 || dy /= 0) $ do
-        let cs' = adjustCameraAngle aspd dx dy cs
+        let cs' = adjustCameraAngle aspd (Vector2 dx dy) cs
         writeIORef stateR (s { camState = cs' })
         centerMouse
 
