@@ -9,17 +9,21 @@ import Types
 
 main = do
     (progName, args) <- getArgsAndInitialize
+
     initialDisplayMode $= [RGBAMode, WithAlphaComponent, DoubleBuffered, WithDepthBuffer]
     window <- createWindow "Gol3d"
+
     depthFunc $= Just Lequal
     cursor $= None
     globalKeyRepeat $= GlobalKeyRepeatOff
 
     stateR <- newIORef defaultState
 
-    displayCallback $= display stateR
+    idleCallback $= Just (idleHandler stateR)
     keyboardMouseCallback $= Just (inputHandler stateR)
     mouseCallback $= Just (mouseHandler stateR)
     passiveMotionCallback $= Just (motionHandler stateR)
+
+    displayCallback $= display stateR
 
     mainLoop

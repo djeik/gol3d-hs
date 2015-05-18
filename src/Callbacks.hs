@@ -33,6 +33,10 @@ keyPollHandler stateR = do
 
     mapM_ (uncurry whenDown) (keyPollMap stateR)
 
+    et <- elapsedTime
+    s <- get stateR
+    stateR $= s { lastKeyPoll = et }
+
 inputHandler stateR key state mods pos = do
     s@(State { kbdState = kbd
              , gameMode = mode
@@ -97,9 +101,22 @@ motionHandler stateR p = do
         centerMouse
         postRedisplay Nothing
 
-display stateR = do
-    keyPollHandler stateR
+idleHandler stateR = do
+    s@(State { lastEvolve = le
+             , evolveDelta = ed
+             , lastKeyPoll = lkp
+             , keyPollDelta = kpd
+             , isPlaying = ip
+             }) <- get stateR
 
+    et <- elapsedTime
+
+    when (et >= lkp + kpd) $ keyPollHandler stateR
+
+    when (ip && et >= le + ed) $ evolveState stateR
+
+display :: IORef State -> DisplayCallback
+display stateR = do
     s@(State { cellDrawConfig = celldc
              , cursorDrawConfig = cursordc
              , camState = cs
@@ -107,11 +124,7 @@ display stateR = do
              , evolveDelta = ed
              , lastEvolve = le
              , gameMode = mode
-             , isPlaying = ip
-             }) <- readIORef stateR
-
-    et <- elapsedTime
-    when (ip && et >= le + ed) $ evolveState stateR
+             }) <- get stateR
 
     clear [ColorBuffer, DepthBuffer]
     setCamera cs

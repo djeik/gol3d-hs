@@ -90,6 +90,8 @@ evolveState stateR = do
                          , lastEvolve = et
                          })
 
+    postRedisplay Nothing
+
 -- | Set the OpenGL projection to correspond with the given "CamState".
 setCamera (CamState { camPos = Vector3 x y z
                     , camAngle = Vector2 theta phi

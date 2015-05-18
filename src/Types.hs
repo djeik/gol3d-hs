@@ -41,6 +41,10 @@ data State = State { cellDrawConfig :: CellDrawConfig
                    -- ^ Current mode of the game; affects input handling
                    , isPlaying :: Bool
                    -- ^ Whether patterns autoupdate after "evolveDelta" ms.
+                   , lastKeyPoll :: Int
+                   -- ^ The last time keys were polled.
+                   , keyPollDelta :: Int
+                   -- ^ How often keys are polled.
                    }
 
 defaultState = State { cellDrawConfig = defaultCellDrawConfig
@@ -51,9 +55,11 @@ defaultState = State { cellDrawConfig = defaultCellDrawConfig
                                            }
                      , kbdState = M.empty
                      , cellMap = toCellMap glider3
-                     , evolveDelta = 250
+                     , evolveDelta = 50
                      , lastEvolve = 0
-                     , moveSpeed = 0.1
+                     , lastKeyPoll = 0
+                     , keyPollDelta = 17
+                     , moveSpeed = 0.25
                      , angleSpeed = 0.005
                      , gameMode = BuildMode
                      , isPlaying = False
