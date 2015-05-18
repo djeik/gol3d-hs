@@ -34,13 +34,14 @@ advanceCamera amt s = s { camPos = cursorLocation' amt s }
 
 -- | Impurely transform the game state given as an "IORef" advancing the
 -- camera by a given amount in the direction of the camera.
+advanceCamera' :: IORef State -> GLfloat -> IO ()
 advanceCamera' stateR k = do
     s <- readIORef stateR
     let cs' = advanceCamera (k * moveSpeed s) (camState s)
     writeIORef stateR (s { camState = cs' })
 
 -- | Impurely transform the game state given as an "IORef" translating the
--- camera by the given vector. 
+-- camera by the given vector.
 -- Translations are applied relative to the current view as given by the
 -- angles "theta" and "phi" in the "State".
 transCamera' :: IORef State -> Vector2 GLfloat -> IO ()
@@ -80,7 +81,6 @@ adjustCameraAngle aspd (Vector2 dx dy) s@(CamState { camAngle = Vector2 theta ph
 -- | Bring the "CellMap" contained by a "State" to the next generation.
 -- This also updates the "lastEvolve" time of "State".
 evolveState stateR = do
-    putStrLn "evolving"
     s@(State { cellMap = cm
              , lastEvolve = le
              }) <- readIORef stateR
