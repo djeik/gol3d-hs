@@ -1,6 +1,7 @@
 module Callbacks where
 
 import Gol3d.Render
+import Gol3d.Life
 
 import Control.Monad ( when )
 import Data.IORef
@@ -27,9 +28,18 @@ keyPollHandler stateR = do
     whenDown (Char 'e') $ transCamera' stateR (Vector2 0 1)
 
 inputHandler stateR key state mods pos = do
-    s@(State { kbdState = kbd }) <- get stateR
+    s@(State { kbdState = kbd
+             , gameMode = mode
+             }) <- get stateR
     let kbd' = M.insert key state kbd
-    writeIORef stateR $ s { kbdState = kbd' }
+
+    let newMode = case (state, key) of
+                      (Down, Char 'b') -> toggleMode mode
+                      _ -> mode
+
+    writeIORef stateR $ s { kbdState = kbd'
+                          , gameMode = newMode
+                          }
 
     case state of
         Down ->
@@ -52,11 +62,13 @@ motionHandler stateR p = do
 display stateR = do
     keyPollHandler stateR
 
-    s@(State { cellDrawConfig = cdc
+    s@(State { cellDrawConfig = celldc
+             , cursorDrawConfig = cursordc
              , camState = cs
              , cellMap = cm
              , evolveDelta = ed
              , lastEvolve = le
+             , gameMode = mode
              }) <- readIORef stateR
 
     et <- elapsedTime
@@ -64,6 +76,15 @@ display stateR = do
 
     clear [ColorBuffer, DepthBuffer]
     setCamera cs
-    drawCellMap cdc cm
+
+    blend $= Disabled
+    drawCellMap celldc (vector3toVertex3 $ camPos cs) cm
+
+    blend $= Enabled
+    when (mode == BuildMode) $ do
+        blendFunc $= (SrcAlpha, OneMinusSrcAlpha)
+        drawCell cursordc (vector3toVertex3 $ camPos cs) $
+            newCell $ fmap fromIntegral $ gameCursorLocation cs
+
     swapBuffers
     postRedisplay Nothing -- TODO put this in the input handler oslt

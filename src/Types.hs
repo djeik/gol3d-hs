@@ -21,6 +21,8 @@ type KeyboardState = M.Map Key KeyState
 data State = State { cellDrawConfig :: CellDrawConfig
                    -- ^ The configuration used to draw the "Cell"s in the
                    -- stored "CellMap".
+                   , cursorDrawConfig :: CellDrawConfig
+                   -- ^ The configuration used to draw the cursor.
                    , camState :: CamState
                    -- ^ The current state of the camera.
                    , kbdState :: KeyboardState
@@ -35,9 +37,11 @@ data State = State { cellDrawConfig :: CellDrawConfig
                    -- ^ The radius of the vision sphere
                    , angleSpeed :: GLfloat
                    -- ^ radians per pixel
+                   , gameMode :: GameMode
                    }
 
 defaultState = State { cellDrawConfig = defaultCellDrawConfig
+                     , cursorDrawConfig = defaultCursorDrawConfig
                      , camState = CamState { camPos = Vector3 0 0 0
                                            , camAngle = Vector2 0 0
                                            , cursorRadius = 5.0
@@ -48,6 +52,10 @@ defaultState = State { cellDrawConfig = defaultCellDrawConfig
                      , lastEvolve = 0
                      , moveSpeed = 0.1
                      , angleSpeed = 0.005
+                     , gameMode = BuildMode
                      }
+
+data GameMode = BuildMode | ViewMode
+              deriving (Eq, Ord, Show, Read)
 
 type StateR = IORef State

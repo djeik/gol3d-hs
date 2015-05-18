@@ -109,3 +109,8 @@ setCamera (CamState { camPos = Vector3 x y z
 
     lookAt (fmap cast $ Vertex3 x y z) (fmap cast $ Vertex3 offX offY offZ) $
         (Vector3 0 1 0)
+
+-- | Switch between ViewMode and BuildMode
+toggleMode :: GameMode -> GameMode
+toggleMode BuildMode = ViewMode
+toggleMode ViewMode = BuildMode

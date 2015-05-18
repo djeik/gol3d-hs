@@ -1,4 +1,4 @@
-module Gol3d.Life 
+module Gol3d.Life
 ( Vector3
 , Cell(..)
 , CellMap, CellSet, CellList
@@ -18,6 +18,7 @@ import qualified Data.Set as S
 import Data.Maybe ( mapMaybe )
 
 data SurvivalResult = Birth | Survival | Death
+                    deriving (Show, Eq, Ord)
 
 type NeighborCount = Int
 type Ruleset = NeighborCount -> SurvivalResult
@@ -37,40 +38,14 @@ type CellList = [Cell]
 
 -- | The offsets to give to a position to compute its neighbors.
 offsets :: [Position]
-offsets = [ Vector3 (-1) (-1) (-1)
-          , Vector3 (-1) (-1) 0
-          , Vector3 (-1) 0 (-1)
-          , Vector3 0 (-1) (-1)
-          , Vector3 0 0 (-1)
-          , Vector3 0 (-1) 0
-          , Vector3 (-1) 0 0
-          , Vector3 (-1) (-1) (-1)
-          , Vector3 (-1) (-1) 1
-          , Vector3 (-1) 1 (-1)
-          , Vector3 1 (-1) (-1)
-          , Vector3 1 1 (-1)
-          , Vector3 1 (-1) 1
-          , Vector3 (-1) 1 1
-          , Vector3 1 1 1
-          , Vector3 1 1 0
-          , Vector3 1 0 1
-          , Vector3 0 1 1
-          , Vector3 0 0 1
-          , Vector3 0 1 0
-          , Vector3 1 0 0
-          , Vector3 0 0 0
-          , Vector3 0 0 1
-          , Vector3 0 1 0
-          , Vector3 1 0 0
-          , Vector3 1 1 0
-          , Vector3 1 0 1
-          , Vector3 0 1 1
+offsets = [ Vector3 x y z | x <- [-1..1], y <- [-1..1], z <- [-1..1],
+            (x, y, z) /= (0, 0, 0)
           ]
 
 -- | The neighboring points of a given position.
 neighbors :: Position -> [Position]
 neighbors p = map (+++ p) offsets
-    where Vector3 x1 x2 x3 +++ Vector3 y1 y2 y3 = 
+    where Vector3 x1 x2 x3 +++ Vector3 y1 y2 y3 =
             Vector3 (x1 + y1) (x2 + y2) (x3 + y3)
 
 -- | Build a new cell (with age 1) at a given location.

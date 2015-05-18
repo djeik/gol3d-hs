@@ -9,9 +9,9 @@ import Types
 
 main = do
     (progName, args) <- getArgsAndInitialize
-    initialDisplayMode $= [DoubleBuffered, WithDepthBuffer]
+    initialDisplayMode $= [RGBAMode, WithAlphaComponent, DoubleBuffered, WithDepthBuffer]
     window <- createWindow "Gol3d"
-    depthFunc $= Just Less
+    depthFunc $= Just Lequal
     cursor $= None
     globalKeyRepeat $= GlobalKeyRepeatOff
 
