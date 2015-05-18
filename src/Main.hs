@@ -19,6 +19,7 @@ main = do
 
     displayCallback $= display stateR
     keyboardMouseCallback $= Just (inputHandler stateR)
+    mouseCallback $= Just (mouseHandler stateR)
     passiveMotionCallback $= Just (motionHandler stateR)
 
     mainLoop

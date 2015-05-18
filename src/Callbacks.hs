@@ -49,6 +49,24 @@ inputHandler stateR key state mods pos = do
                 _ -> return ()
         _ -> return ()
 
+mouseHandler stateR btn keyState pos = do
+    s@(State { camState = cs
+             , gameMode = mode
+             , cellMap = cm
+             }) <- get stateR
+
+    let f = case keyState of
+                Down ->
+                    case btn of
+                        LeftButton -> insertCell' $
+                            fmap fromIntegral $ gameCursorLocation cs
+                        RightButton -> deleteCell' $
+                            fmap fromIntegral $ gameCursorLocation cs
+                        _ -> id
+                _ -> id
+
+    writeIORef stateR (s { cellMap = f cm })
+
 motionHandler stateR p = do
     s@(State { camState = cs
              , angleSpeed = aspd

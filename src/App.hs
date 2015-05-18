@@ -3,6 +3,7 @@ module App where
 import Gol3d.Life hiding ( Position )
 
 import Data.IORef
+import qualified Data.Map as M
 import Graphics.UI.GLUT
 
 import Types
@@ -114,3 +115,21 @@ setCamera (CamState { camPos = Vector3 x y z
 toggleMode :: GameMode -> GameMode
 toggleMode BuildMode = ViewMode
 toggleMode ViewMode = BuildMode
+
+-- | Insert a new "Cell" into a "CellMap" given its position.
+-- This is simply a monomorphic version of "Data.Map.insert".
+insertCell' :: Vector3 Int -> CellMap -> CellMap
+insertCell' k = M.insert k (newCell k)
+
+-- | Insert a "Cell" into a "CellMap".
+insertCell :: Cell -> CellMap -> CellMap
+insertCell c = insertCell' (cellPos c)
+
+-- | Delete a "Cell" from a "CellMap" given its position.
+-- This is simply a monomorphic version of "Data.Map.delete".
+deleteCell' :: Vector3 Int -> CellMap -> CellMap
+deleteCell' = M.delete
+
+-- | Delete a "Cell" from a "CellMap".
+deleteCell :: Cell -> CellMap -> CellMap
+deleteCell c = deleteCell' (cellPos c)
