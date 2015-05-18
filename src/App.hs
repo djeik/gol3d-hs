@@ -95,7 +95,8 @@ setCamera (CamState { camPos = Vector3 x y z
                     }) = do
     matrixMode $= Projection
     loadIdentity
-    perspective 45.0 1 1.0 50.0
+    (_, Size w h) <- get viewport
+    perspective 45.0 (fromIntegral w / fromIntegral h) 1.0 100.0
 
     matrixMode $= Modelview 0
     loadIdentity
