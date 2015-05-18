@@ -11,6 +11,7 @@ import qualified Data.Map as M
 
 data CamState = CamState { camPos :: Vector3 GLfloat
                          , camAngle :: Vector2 GLfloat
+                         , cursorRadius :: GLfloat
                          }
 
 -- | An internally managed cache of key states.
@@ -39,6 +40,7 @@ data State = State { cellDrawConfig :: CellDrawConfig
 defaultState = State { cellDrawConfig = defaultCellDrawConfig
                      , camState = CamState { camPos = Vector3 0 0 0
                                            , camAngle = Vector2 0 0
+                                           , cursorRadius = 5.0
                                            }
                      , kbdState = M.empty
                      , cellMap = toCellMap glider3

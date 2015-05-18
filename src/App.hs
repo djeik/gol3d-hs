@@ -7,22 +7,30 @@ import Graphics.UI.GLUT
 
 import Types
 
--- | Get the position of the cursor in the game.
--- The game cursor is location a distance r away from the current camera
--- position in the direction of the camera orientation. Equally, this is
--- the forwards movement direction.
-cursorLocation :: GLfloat -> CamState -> Vector3 GLfloat
-cursorLocation r (CamState { camPos = Vector3 x y z
-                           , camAngle = Vector2 theta phi
-                           }) = Vector3 x' y' z'
+-- | Get the position of the cursor in the game with a given radius from
+-- the camera position.
+cursorLocation' :: GLfloat -> CamState -> Vector3 GLfloat
+cursorLocation' r (CamState { camPos = Vector3 x y z
+                            , camAngle = Vector2 theta phi
+                            }) = Vector3 x' y' z'
     where x' = x + r * cos theta * sin phi
           y' = y + r * cos phi
           z' = z + r * sin theta * sin phi
 
+-- | Get the position of the cursor in the game.
+-- The game cursor is location a distance r away from the current camera
+-- position in the direction of the camera orientation. Equally, this is
+-- the forwards movement direction.
+cursorLocation :: CamState -> Vector3 GLfloat
+cursorLocation cs@(CamState { cursorRadius = r }) = cursorLocation' r cs
+
+gameCursorLocation :: CamState -> Vector3 GLint
+gameCursorLocation = fmap round . cursorLocation
+
 -- | Transform the camera state advancing the camera by the given amount in
 -- the current direction of the camera.
 advanceCamera :: GLfloat -> CamState -> CamState
-advanceCamera amt s = s { camPos = cursorLocation amt s }
+advanceCamera amt s = s { camPos = cursorLocation' amt s }
 
 -- | Impurely transform the game state given as an "IORef" advancing the
 -- camera by a given amount in the direction of the camera.
@@ -35,7 +43,8 @@ advanceCamera' stateR k = do
 -- camera by the given vector. 
 -- Translations are applied relative to the current view as given by the
 -- angles "theta" and "phi" in the "State".
-transCamera' stateR (dx, dy) = do
+transCamera' :: IORef State -> Vector2 GLfloat -> IO ()
+transCamera' stateR (Vector2 dx dy) = do
     s@(State { camState = cs@(CamState { camPos = Vector3 x y z
                                        , camAngle = Vector2 theta phi
                                        })

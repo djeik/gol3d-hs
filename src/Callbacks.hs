@@ -20,11 +20,11 @@ keyPollHandler stateR = do
     let whenDown key action = whenKey' kbd key Down action
 
     whenDown (Char 'w') $ advanceCamera' stateR 1
-    whenDown (Char 'a') $ transCamera' stateR (-1, 0)
-    whenDown (Char 'd') $ transCamera' stateR (1, 0)
+    whenDown (Char 'a') $ transCamera' stateR (Vector2 (-1) 0)
+    whenDown (Char 'd') $ transCamera' stateR (Vector2 1 0)
     whenDown (Char 's') $ advanceCamera' stateR (-1)
-    whenDown (Char 'q') $ transCamera' stateR (0, -1)
-    whenDown (Char 'e') $ transCamera' stateR (0, 1)
+    whenDown (Char 'q') $ transCamera' stateR (Vector2 0 (-1))
+    whenDown (Char 'e') $ transCamera' stateR (Vector2 0 1)
 
 inputHandler stateR key state mods pos = do
     s@(State { kbdState = kbd }) <- get stateR
