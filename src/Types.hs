@@ -38,6 +38,9 @@ data State = State { cellDrawConfig :: CellDrawConfig
                    , angleSpeed :: GLfloat
                    -- ^ radians per pixel
                    , gameMode :: GameMode
+                   -- ^ Current mode of the game; affects input handling
+                   , isPlaying :: Bool
+                   -- ^ Whether patterns autoupdate after "evolveDelta" ms.
                    }
 
 defaultState = State { cellDrawConfig = defaultCellDrawConfig
@@ -48,11 +51,12 @@ defaultState = State { cellDrawConfig = defaultCellDrawConfig
                                            }
                      , kbdState = M.empty
                      , cellMap = toCellMap glider3
-                     , evolveDelta = 100000000
+                     , evolveDelta = 250
                      , lastEvolve = 0
                      , moveSpeed = 0.1
                      , angleSpeed = 0.005
                      , gameMode = BuildMode
+                     , isPlaying = False
                      }
 
 data GameMode = BuildMode | ViewMode

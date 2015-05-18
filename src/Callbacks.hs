@@ -30,15 +30,21 @@ keyPollHandler stateR = do
 inputHandler stateR key state mods pos = do
     s@(State { kbdState = kbd
              , gameMode = mode
+             , isPlaying = playing
              }) <- get stateR
     let kbd' = M.insert key state kbd
 
-    let newMode = case (state, key) of
-                      (Down, Char 'b') -> toggleMode mode
-                      _ -> mode
+    let mode' = case (state, key) of
+                    (Down, Char 'b') -> toggleMode mode
+                    _ -> mode
+
+    let isPlaying' = case (state, key) of
+                         (Down, Char 'p') -> not playing
+                         _ -> playing
 
     writeIORef stateR $ s { kbdState = kbd'
-                          , gameMode = newMode
+                          , gameMode = mode'
+                          , isPlaying = isPlaying'
                           }
 
     case state of
@@ -87,10 +93,11 @@ display stateR = do
              , evolveDelta = ed
              , lastEvolve = le
              , gameMode = mode
+             , isPlaying = ip
              }) <- readIORef stateR
 
     et <- elapsedTime
-    when (et >= le + ed) $ evolveState stateR
+    when (ip && et >= le + ed) $ evolveState stateR
 
     clear [ColorBuffer, DepthBuffer]
     setCamera cs
