@@ -15,17 +15,23 @@ import Input
 import Types
 import App
 
+keyPollMap :: IORef State -> [(Key, IO ())]
+keyPollMap stateR = [ (Char 'w', advanceCamera' stateR 1)
+                    , (Char 'a', transCamera' stateR (Vector2 (-1) 0))
+                    , (Char 'd', transCamera' stateR (Vector2 1 0))
+                    , (Char 's', advanceCamera' stateR (-1))
+                    , (Char 'q', transCamera' stateR (Vector2 0 (-1)))
+                    , (Char 'e', transCamera' stateR (Vector2 0 1))
+                    ]
+
 -- | An input handler that uses polling.
 keyPollHandler stateR = do
     s@(State { kbdState = kbd }) <- get stateR
-    let whenDown key action = whenKey' kbd key Down action
+    let whenDown key action = whenKey' kbd key Down $
+                                  do action
+                                     postRedisplay Nothing
 
-    whenDown (Char 'w') $ advanceCamera' stateR 1
-    whenDown (Char 'a') $ transCamera' stateR (Vector2 (-1) 0)
-    whenDown (Char 'd') $ transCamera' stateR (Vector2 1 0)
-    whenDown (Char 's') $ advanceCamera' stateR (-1)
-    whenDown (Char 'q') $ transCamera' stateR (Vector2 0 (-1))
-    whenDown (Char 'e') $ transCamera' stateR (Vector2 0 1)
+    mapM_ (uncurry whenDown) (keyPollMap stateR)
 
 inputHandler stateR key state mods pos = do
     s@(State { kbdState = kbd
@@ -55,23 +61,30 @@ inputHandler stateR key state mods pos = do
                 _ -> return ()
         _ -> return ()
 
+    postRedisplay Nothing
+
 mouseHandler stateR btn keyState pos = do
     s@(State { camState = cs
              , gameMode = mode
              , cellMap = cm
              }) <- get stateR
 
-    let f = case keyState of
-                Down ->
-                    case btn of
-                        LeftButton -> insertCell' $
-                            fmap fromIntegral $ gameCursorLocation cs
-                        RightButton -> deleteCell' $
-                            fmap fromIntegral $ gameCursorLocation cs
-                        _ -> id
-                _ -> id
+    let (f, act) = case keyState of
+                       Down ->
+                           ( case btn of
+                               LeftButton -> insertCell' $
+                                             fmap fromIntegral $
+                                             gameCursorLocation cs
+                               RightButton -> deleteCell' $
+                                              fmap fromIntegral $
+                                              gameCursorLocation cs
+                               _ -> id
+                           , postRedisplay Nothing
+                           )
+                       _ -> (id, return ())
 
     writeIORef stateR (s { cellMap = f cm })
+    act
 
 motionHandler stateR p = do
     s@(State { camState = cs
@@ -82,6 +95,7 @@ motionHandler stateR p = do
         let cs' = adjustCameraAngle aspd (Vector2 dx dy) cs
         writeIORef stateR (s { camState = cs' })
         centerMouse
+        postRedisplay Nothing
 
 display stateR = do
     keyPollHandler stateR
@@ -112,4 +126,3 @@ display stateR = do
             newCell $ fmap fromIntegral $ gameCursorLocation cs
 
     swapBuffers
-    postRedisplay Nothing -- TODO put this in the input handler oslt
