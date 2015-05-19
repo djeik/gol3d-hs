@@ -72,37 +72,21 @@ boxOffsets = [ Vertex3 0 0 0
              ]
 
 faceOffsets :: [[Vertex3 GLfloat]]
-faceOffsets = [ [ Vertex3 0 0 0
-                , Vertex3 0 1 0
-                , Vertex3 1 1 0
-                , Vertex3 1 0 0
-                ]
-              , [ Vertex3 0 0 1
-                , Vertex3 0 1 1
-                , Vertex3 1 1 1
-                , Vertex3 1 0 1
-                ]
-              , [ Vertex3 0 0 0
-                , Vertex3 0 0 1
-                , Vertex3 1 0 1
-                , Vertex3 1 0 0
-                ]
-              , [ Vertex3 0 1 0
-                , Vertex3 0 1 1
-                , Vertex3 1 1 1
-                , Vertex3 1 1 0
-                ]
-              , [ Vertex3 0 0 0
-                , Vertex3 0 0 1
-                , Vertex3 0 1 1
-                , Vertex3 0 1 0
-                ]
-              , [ Vertex3 1 0 0
-                , Vertex3 1 0 1
-                , Vertex3 1 1 1
-                , Vertex3 1 1 0
-                ]
+faceOffsets = [ [ f0, f1, f3, f2 ] -- front face
+              , [ f1, f5, f7, f3 ] -- right face
+              , [ f5, f4, f6, f7 ] -- back face
+              , [ f4, f0, f2, f6 ] -- right face
+              , [ f2, f3, f7, f6 ] -- top face
+              , [ f0, f4, f5, f1 ] -- bottom face
               ]
+    where f0 = Vertex3 0 0 0
+          f1 = Vertex3 1 0 0
+          f2 = Vertex3 0 1 0
+          f3 = Vertex3 1 1 0
+          f4 = Vertex3 0 0 1
+          f5 = Vertex3 1 0 1
+          f6 = Vertex3 0 1 1
+          f7 = Vertex3 1 1 1
 
 -- | Zip a list with itself, dropping the first n elements.
 -- Thus, each element is zipped with the one n spots later in the list.
@@ -150,8 +134,7 @@ drawBody :: GLfloat -- ^ fraction of each axis to fill
          -> [(Vertex3 GLfloat, IO ())]
          -- ^ association list of centers and drawing actions
 drawBody k col c = map (\vs -> ( centerPoint 4 vs
-                               , do color col
-                                    renderPrimitive Quads (mapM_ vertex vs)
+                               , mapM_ vertex vs
                                )
                        ) vss
     where vss = map (cellVertices k c) faceOffsets
@@ -161,7 +144,11 @@ drawBody k col c = map (\vs -> ( centerPoint 4 vs
 drawCell :: CellDrawConfig -> Vertex3 GLfloat -> Cell -> IO ()
 drawCell cdf camPos c = do
     drawWireFrame (wireFrameFraction cdf) (wireFrameColor cdf c) c
-    sequence_ . map snd $ sortBy (compare `on` (d . fst)) $ drawBody (bodyFraction cdf) (bodyColor cdf c) c
+    color $ bodyColor cdf c
+    renderPrimitive Quads $
+        sequence_ . map snd $
+            --sortBy (compare `on` d . fst) $
+                drawBody (bodyFraction cdf) (bodyColor cdf c) c
     where d p = let Vertex3 x y z = fmap (**2) $ camPos +++ (p */ (-1)) in x + y + z
 
 

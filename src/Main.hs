@@ -16,6 +16,7 @@ main = do
     depthFunc $= Just Lequal
     cursor $= None
     globalKeyRepeat $= GlobalKeyRepeatOff
+    cullFace $= Just Back
 
     stateR <- newIORef defaultState
 
