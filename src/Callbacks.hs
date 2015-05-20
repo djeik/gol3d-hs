@@ -33,7 +33,7 @@ keyPollHandler stateR = do
 
     mapM_ (uncurry whenDown) (keyPollMap stateR)
 
-    et <- elapsedTime
+    et <- get elapsedTime
     s <- get stateR
     stateR $= s { lastKeyPoll = et }
 
@@ -109,7 +109,7 @@ idleHandler stateR = do
              , isPlaying = ip
              }) <- get stateR
 
-    et <- elapsedTime
+    et <- get elapsedTime
 
     when (et >= lkp + kpd) $ keyPollHandler stateR
 

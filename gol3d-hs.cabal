@@ -21,10 +21,10 @@ executable gol3d-hs
   -- other-extensions:
   ghc-options: -fprof-auto -rtsopts -fwarn-unused-imports
   build-depends:
-    base >=4.8 && <4.9,
+    base >=4.6 && <4.9,
     vector >=0.10 && <1,
-    OpenGL >=2.12 && <3,
+    OpenGL >=2.11 && <3,
     containers >= 0.5 && < 1,
-    GLUT >=2.7 && <2.8
+    GLUT >=2.6 && <2.8
   hs-source-dirs:      src
   default-language:    Haskell2010

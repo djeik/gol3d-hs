@@ -12,6 +12,7 @@ import Gol3d.Life
 import Graphics.UI.GLUT
 
 import Control.Monad ( forM_ )
+import Control.Applicative
 import Data.Map ( elems )
 import Data.Function ( on )
 import Data.List ( sortBy )

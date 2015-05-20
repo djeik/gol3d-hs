@@ -85,7 +85,7 @@ evolveState stateR = do
     s@(State { cellMap = cm
              , lastEvolve = le
              }) <- readIORef stateR
-    et <- elapsedTime
+    et <- get elapsedTime
     writeIORef stateR (s { cellMap = evolve cm
                          , lastEvolve = et
                          })
